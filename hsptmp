@@ -1,0 +1,15 @@
+x=0 : y=100
+reachx=0.5
+reachy=0.5
+
+*main
+	redraw 0
+	angle+=5.0
+	circle x,y,x+20,y+20
+	
+	x=(deg2rad(angle)*reachy*+sin(deg2rad(angle))*reachy
+	y=100-cos(deg2rad(angle))*reachx
+	
+	redraw 1
+	wait 1
+	goto *main

@@ -1,0 +1,732 @@
+title "Tennis game"
+#packopt name "Tennis game"       ;実行ファイル名を指定
+screen 0,819.2,572.8,0,273.4,97.6 ;サイズ、表示位置
+
+celload "court.jpg",1       ;テニスコート
+#pack   "court.jpg"
+celload "racketSche.png",2  ;ラケット
+#pack   "racketSche.png"
+celload "rracketSche.png",3 ;ラケット(反転)
+#pack   "rracketSche.png"
+celload "ball.jpg",4        ;ボール
+#pack   "ball.jpg"
+celload "score.png",5       ;スコアボード
+#pack   "score.png"
+celload "title.png",6       ;タイトル画面
+#pack   "title.png"
+celload "craycourt.jpg",7   ;クレーコート
+#pack   "craycourt.jpg"
+celload "hardcourt.jpg",8   ;ハードコート
+#pack   "hardcourt.jpg"
+celload "redball.jpg",9     ;波動球
+#pack   "redball.jpg"
+
+mmload "niceshot.mp3",1     ;ナイスヒット音
+#pack  "niceshot.mp3"
+mmload "outshot.mp3",2      ;アウト音
+#pack  "outshot.mp3"
+mmload "point.wav",3        ;ポイント（拍手）
+#pack  "point.wav"
+mmload "oh.wav",4           ;がっかり
+#pack  "oh.wav"
+mmload "boo.wav",5          ;ブーイング
+#pack  "boo.wav"
+mmload "win.mp3",6          ;勝利音
+#pack  "win.mp3"
+mmload "lose.mp3",7         ;敗北音
+#pack  "lose.mp3"
+
+win=0 : loss=0 ;ポイントをいれる箱を準備
+reachy=65.0    ;y方向のバウンド数
+reachx=0.5     ;曲がり具合
+courtcolor==0  ;サーフェス
+a==0 : b==0
+operate==0
+
+*titlescreen
+ repeat
+	redraw 0
+	color 255,255,255 : boxf
+	pos 0,0 : celput 6,,0.8,0.75
+	stick a
+	if a==16 : break
+	redraw 1
+	wait 1
+ loop
+
+ repeat 8
+	redraw 0
+	color 255,255,255 : boxf
+	if cnt==1 | cnt==5 : color 0,0,0 : pos 350,250 : mes "now loading"
+	if cnt==2 | cnt==6 : color 0,0,0 : pos 350,250 : mes "now loading."
+	if cnt==3 | cnt==7 : color 0,0,0 : pos 350,250 : mes "now loading.."
+	if cnt==4 | cnt==8 : color 0,0,0 : pos 350,250 : mes "now loading..."
+	redraw 1
+	wait 10
+ loop
+	goto *main 
+	
+*main 
+	;勝利or敗北条件
+	if win>=4  & win>=loss+2 { ;勝利
+		         mmplay 6
+	             dialog "You are win!"
+	             dialog "Retry?",2
+	             if stat=6 : win=0 : loss=0 : goto *main ;再チャレンジ
+	             if stat=7 :dialog "Thank you for playing!" : end
+	}
+	if loss>=4 & loss>=win+2 { ;敗北
+	             mmplay 7
+	             dialog "You are lose."
+	             dialog "Retry?",2
+	             if stat=6 : win=0 : loss=0 : goto *main  ;再チャレンジ
+	             if stat=7 : dialog "Thank you for playing!" : end
+	}
+
+ballx=390   : bally=30           ;初期位置リセット
+racketx=320 : rackety=400
+reachx=0.5
+courseX=0.0                      ;左右方向リセット
+angle=0.0                        ;回転角度リセット
+b=0
+randomize
+direction==rnd(5)
+
+*prepare                         ;準備段階
+	redraw 0
+	color 255,255,255 : boxf     ;リセット
+	if courtcolor==0 {           ;コート
+		pos 0,0
+		celput 1,,0.8,0.8
+	}
+	if courtcolor==1 {           ;クレイコート
+		pos 0,0
+		celput 7,,0.8,0.8
+	}
+	if courtcolor==2 {           ;ハードコート
+		pos 0,0
+		celput 8,,0.8,0.8
+	}
+	pos ballx,bally              ;ボール
+	gmode 2 : celput 4,,0.08,0.08
+	
+	pos 600,20                   ;スコアボード
+	gmode 1 : celput 5,,0.9,0.9
+	pos 770,68                   ;自分のポイント
+	color 255,255,0
+	if win==0 : print " 0"
+	if win==1 : print "15"
+	if win==2 : print "30"
+	if win==3 : print "40"
+	if win>3  & win=loss-1 : print "40"
+	if win>3  & win=loss   : print "40"
+	if win>=4 & win=loss+1 : print " A"
+	pos 770,125                  ;相手のポイント
+	color 255,255,0
+	if loss==0 : print " 0"
+	if loss==1 : print "15"
+	if loss==2 : print "30"
+	if loss==3 : print "40"
+	if loss>3  & loss=win-1 : print "40"
+	if loss>3  & loss=win   : print "40"
+	if loss>=4 & loss=win+1 : print " A"
+	
+	color 0,0,0                             ;操作説明
+	pos 30,40
+	mes "←→\nMove\n\nSpace\nStart\n\nEsc\nRestart\n\nC:Clay\nH:Hard\nG:Grass\n\nCtrl←→Enter\nCursor←→Mouse"
+	
+	;チートコード(TABキー＋前か左右(＋下でショートクロス))
+	stick a,1+2+4+8+1024
+	
+	if a==1+1024   {
+		pos 0,0 : mes "0"
+		direction==0
+		wait 10
+	}
+    if a==1+8+1024 {
+	    pos 0,0 : mes "1"
+	    direction==1
+	    wait 10
+	}
+	if a==2+1024   {
+		pos 0,0 : mes "2"
+		direction==2 
+		wait 10
+	}
+	if a==4+1024   {
+		pos 0,0 : mes "3"
+		direction==3
+		wait 10
+	}
+	if a==4+8+1024 {
+		pos 0,0 : mes "4"
+		direction==4
+		wait 10
+	}
+	if a==2+8+1024 {
+		pos 0,0 : mes "clear"
+		direction==rnd(5)
+		wait 10
+	}
+	
+	if a==16  : mmplay 1 : wait 30 : goto *start ;Spaceでスタート
+	if a==128 : win=0 : loss=0     : goto *main  ;Escでリスタート
+	
+	;操作方法
+	if a==32 {
+		pos 0,0 : mes "mouse"
+		operate==1 ;ETRでマウス操作
+	}
+	if a==64 {
+		pos 0,0 : mes"Cursor"
+		operate==0 ;CTRLでカーソル操作
+	}
+	
+	if operate==0 {
+		if a==1   : racketx=racketx-5.5
+	    if a==4   : racketx=racketx+5.5
+	}
+	if operate==1 {
+		if racketx>=250 : racketx=mousex-70
+		if racketx<250  : racketx=mousex-48
+	}
+	pos racketx,rackety          
+	if racketx>=250 : gmode 2 : celput 2,,0.7,0.7
+	if racketx<250  : gmode 2 : celput 3,,0.7,0.7
+	    
+	;サーフェスを変える
+	getkey C,67 ;Clay court
+	getkey H,72 ;Hard court
+	getkey G,71 ;Glass court
+	if C==1 : courtcolor==1
+	if H==1 : courtcolor==2
+	if G==1 : courtcolor==0
+	
+	;必殺技モード
+	getkey F8,119
+	getkey F9,120
+	getkey F10,121
+	getkey F7,118
+	if F8=1 {
+		pos 0,0 : mes "1" ;つばめ返し
+		direction==5
+	}
+	if F9=1 {
+		pos 0,0 : mes "2" ; スネイク
+		direction==6
+	}
+	if F7=1 {
+		pos 0,0 : mes "3" ;波動球
+		direction==7
+	} 
+	wait 1
+	redraw 1
+	goto *prepare
+ 	
+*start
+	redraw 0
+	
+	;基本動作
+	color 255,255,255 : boxf
+	if courtcolor==0 {
+		pos 0,0
+		celput 1,,0.8,0.8
+	}
+	if courtcolor==1 {
+		pos 0,0
+		celput 7,,0.8,0.8
+	}
+	if courtcolor==2 {
+		pos 0,0
+		celput 8,,0.8,0.8
+	}
+	pos ballx,bally              
+	gmode 2 : celput 4,,0.08,0.08
+	if operate==0 {
+		if a==1   : racketx=racketx-5.5
+	    if a==4   : racketx=racketx+5.5
+	    }
+	if operate==1 {
+		if racket>=250 : racketx=mousex-70
+		if racket<250  : racketx=mousex-48
+	}
+	pos racketx,rackety          
+	if racketx>=250 : gmode 2 : celput 2,,0.7,0.7
+	if racketx<250  : gmode 2 : celput 3,,0.7,0.7
+	color 0,0,0
+	pos 30,40
+	mes "←→\nMove\n\nSpace\nStart\n\nEsc\nRestart\n\nC:Clay\nH:Hard\nG:Grass\n\nCtrl←→Enter\nCursor←→Mouse"
+	pos 600,20 : celput 5,,0.9,0.9
+	pos 770,68
+	color 255,255,0
+	if win==0 : print " 0"
+	if win==1 : print "15"
+	if win==2 : print "30"
+	if win==3 : print "40"
+	if win>3  & win=loss-1 : print "40"
+	if win>3  & win=loss   : print "40"
+	if win>=4 & win=loss+1 : print " A"
+	pos 770,125
+	color 255,255,0
+	if loss==0 : print " 0"
+	if loss==1 : print "15"
+	if loss==2 : print "30"
+	if loss==3 : print "40"
+	if loss>3  & loss=win-1 : print "40"
+	if loss>3  & loss=win   : print "40"
+	if loss>=4 & loss=win+1 : print " A"
+	stick a,1+4
+	if a==128 : win=0 : loss=0 : goto *main
+
+	;ボールの軌道
+	courseX+=3.5 ;だんだんx座標を加えていく
+	
+	if courtcolor==0 {
+		angle+=6.0
+		bally=deg2rad(angle)*reachy-sin(deg2rad(angle))*reachy
+		if direction==0 | direction==1 {
+			ballx=400-courseX+cos(deg2rad(angle))*reachx
+			}
+		if direction==3 | direction==4 {
+			ballx=400+courseX-cos(deg2rad(angle))*reachx
+			}
+	}
+	if courtcolor==1 {
+		angle+=1.0
+		bally=deg2rad(angle)*reachy*10.0-sin(deg2rad(angle))*reachy*10.0
+		if direction==0 | direction==1 {
+			ballx=400-courseX+cos(deg2rad(angle))*reachx
+			}
+		if direction==3 | direction==4 {
+			ballx=400+courseX-cos(deg2rad(angle))*reachx
+			}
+	}
+	if courtcolor==2 {
+		angle+=100.0
+		bally=deg2rad(angle)*reachy*0.1-sin(deg2rad(angle))*reachy*0.1
+		if direction==0 | direction==1 {
+			ballx=400-courseX+cos(deg2rad(angle))*reachx
+			}
+		if direction==3 | direction==4 {
+			ballx=400+courseX-cos(deg2rad(angle))*reachx
+			}
+	}
+	
+	if bally>=445 & bally<=455 { ;当たり判定。まずy座標
+	     if racketx>=280 {
+		    if ballx<=racketx+90 & ballx>racketx+50  : goto *nice
+		    if ballx<=racketx+50 & ballx>=racketx-10 : goto *out
+	        if ballx>racketx+90  | ballx<racketx-10  : goto *notouch
+	     }
+	     if racketx<280 { ;反転したラケットの場合
+		    if ballx>=racketx    & ballx<racketx+40   : goto *nice
+	        if ballx>=racketx+40 & ballx<=racketx+100 : goto *out
+	        if ballx>racketx+100 | ballx<racketx+10   : goto *notouch
+	     }
+	}
+	wait 1
+	redraw 1
+	goto *start
+	
+;判定後
+*nice
+	mmplay 1   ;打ち返した音
+	couseX=0.0 ;リセット
+	angle=0.0
+	
+ repeat
+	redraw 0
+	
+	;基本動作
+	color 255,255,255 : boxf
+	if courtcolor==0 {
+		pos 0,0
+		celput 1,,0.8,0.8
+	}
+	if courtcolor==1 {
+		pos 0,0
+		celput 7,,0.8,0.8
+	}
+	if courtcolor==2 {
+		pos 0,0
+		celput 8,,0.8,0.8
+	}
+	if direction!=7 {
+		pos ballx,bally    
+		gmode 2 : celput 4,,0.08,0.08
+	}
+	if direction==7 {
+		pos ballx,bally
+		gmode 2 : celput 9,,0.08,0.08
+	}
+	if operate==0 {
+		if a==1   : racketx=racketx-5.5
+	    if a==4   : racketx=racketx+5.5
+	}
+	if operate==1 {
+		if racketx>=250 : racketx=mousex-70
+		if racketx<250  : racketx=mousex-48
+	}
+	pos racketx,rackety     
+	if racketx>=250 : gmode 2 : celput 2,,0.7,0.7
+	if racketx<250  : gmode 2 : celput 3,,0.7,0.7
+	color 0,0,0
+	pos 30,40
+	mes "←→\nMove\n\nSpace\nStart\n\nEsc\nRestart\n\nC:Clay\nH:Hard\nG:Grass\n\nCtrl←→Enter\nCursor←→Mouse"
+	pos 600,20
+	gmode 1 : celput 5,,0.9,0.9
+	pos 770,68
+	color 255,255,0
+	if win==0 : print " 0"
+	if win==1 : print "15"
+	if win==2 : print "30"
+	if win==3 : print "40"
+	if win>3  & win=loss-1 : print "40"
+	if win>3  & win=loss   : print "40"
+	if win>=4 & win=loss+1 : print " A"
+	pos 770,125
+	color 255,255,0
+	if loss==0 : print " 0"
+	if loss==1 : print "15"
+	if loss==2 : print "30"
+	if loss==3 : print "40"
+	if loss>3  & loss=win-1 : print "40"
+	if loss>3  & loss=win   : print "40"
+	if loss>=4 & loss=win+1 : print " A"
+	stick a,1+4
+	if a==128 : win=0 : loss=0 : break
+	
+	courseX+=3.5
+	
+	;ショットの軌道
+	if courtcolor==0 { ;オムニコートの軌道
+	    if direction==0 { ;Bダウンザライン
+		    angle+=7.5
+		    ballx+=5.0
+	        bally=450-deg2rad(angle)*reachy*1.9-sin(deg2rad(angle))*reachy*1.9
+	    }
+	    if direction==1 { ;Bクロス
+		    angle+=7.5
+		    ballx+=13
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+		}
+		if direction==2 { ;センターからクロス
+		    angle+=7.5
+		    ballx-=4.0
+		    bally=450-deg2rad(angle)*reachy*1.9-sin(deg2rad(angle))*reachy*1.9
+		}
+		if direction==3 { ;Fダウンザライン
+		    angle+=7.5
+		    ballx-=5.0
+		    bally=450-deg2rad(angle)*reachy*1.9-sin(deg2rad(angle))*reachy*1.9
+		}
+		if direction==4 { ;Fクロス
+	        angle+=7.5
+	        ballx-=13.0
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+		}
+	
+		if direction==5 { ;つばめ返し
+		    angle+=7.5
+		    if bally>=200 : bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+	        if bally<200  : bally=bally-5
+		}
+		if direction==6 { ;スネイク
+		    b+=5.0
+		    angle+=2.0
+		    reachx=300.0
+		    ballx=400+cos(deg2rad(angle))*reachx+b
+		    bally=450-deg2rad(angle)*reachy*2.0-sin(deg2rad(angle))*reachy*2.0
+		}
+		if direction==7 { ;波動球
+			angle+=12.0
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+	    }
+	}
+	
+	if courtcolor==1 { ;クレイコートの軌道
+	    if direction==0 { ;Bダウンザライン
+		    angle+=3.0
+		    ballx+=5.0
+	        bally=450-deg2rad(angle)*reachy*1.9-sin(deg2rad(angle))*reachy*1.9
+	    }
+	    if direction==1 { ;Bクロス
+		    angle+=3.0
+		    ballx+=13
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+		}
+		if direction==2 { ;センターからクロス
+		    angle+=3.0
+		    ballx-=4.0
+		    bally=450-deg2rad(angle)*reachy*2.5-sin(deg2rad(angle))*reachy*2.5
+		}
+		if direction==3 { ;Fダウンザライン
+		    angle+=3.0
+		    ballx-=5.0
+		    bally=450-deg2rad(angle)*reachy*1.9-sin(deg2rad(angle))*reachy*1.9
+		}
+		if direction==4 { ;Fクロス
+	        angle+=3.0
+	        ballx-=13.0
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+		}
+		if direction==5 { ;つばめ返し
+		    angle+=3.0
+		    if bally>=200 : bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+	        if bally<200  : bally=bally-5
+		}
+		if direction==6 { ;スネイク
+		    b+=5.0
+		    angle+=2.0
+		    reachx=300.0
+		    ballx=400+cos(deg2rad(angle))*reachx+b
+		    bally=450-deg2rad(angle)*reachy*2.0-sin(deg2rad(angle))*reachy*2.0
+		}
+		if direction==7 { ;波動球
+			angle+=12.0
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+	    }
+	}
+	
+	if courtcolor==2 { ;ハードコートの軌道
+	    if direction==0 { ;Bダウンザライン
+		    angle+=50.0
+		    ballx+=5.0
+	        bally=450-deg2rad(angle)*reachy*1.9-sin(deg2rad(angle))*reachy*1.9
+	    }
+	    if direction==1 { ;Bクロス
+		    angle+=50.0
+		    ballx+=13
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+		}
+		if direction==2 { ;センターからクロス
+		    angle+=50.0
+		    ballx-=4.0
+		    bally=450-deg2rad(angle)*reachy*1.0-sin(deg2rad(angle))*reachy*1.0
+		}
+		if direction==3 { ;Fダウンザライン
+		    angle+=50.0
+		    ballx-=5.0
+		    bally=450-deg2rad(angle)*reachy*1.9-sin(deg2rad(angle))*reachy*1.9
+		}
+		if direction==4 { ;Fクロス
+	        angle+=50.0
+	        ballx-=13.0
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+		}
+		if direction==5 { ;つばめ返し
+		    angle+=7.5
+		    if bally>=200 : bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+	        if bally<200  : bally=bally-5
+		}
+		if direction==6 { ;スネイク
+		    b+=5.0
+		    angle+=2.0
+		    reachx=300.0
+		    ballx=400+cos(deg2rad(angle))*reachx+b
+		    bally=450-deg2rad(angle)*reachy*2.0-sin(deg2rad(angle))*reachy*2.0
+		}
+		if direction==7 { ;波動球
+			angle+=12.0
+		    bally=450-deg2rad(angle)*reachy*1.6-sin(deg2rad(angle))*reachy*1.6
+	    }
+			
+	}
+	
+	if bally<0 { ;相手コートに到達したとき
+		        wait 40
+		        mmplay 3
+		        win=win+1
+		        if direction=7 : win=win+10
+		        break
+	}
+
+	redraw 1
+	wait 1
+ loop
+ 
+    goto *main
+    
+*out
+	mmplay 2    ;フレームショットの音
+	courseX=0.0 ;リセット
+	angle=0.0
+ 
+ repeat
+	redraw 0
+	
+	;基本動作
+	color 255,255,255 : boxf
+	if courtcolor==0 {
+		pos 0,0
+		celput 1,,0.8,0.8
+	}
+	if courtcolor==1 {
+		pos 0,0
+		celput 7,,0.8,0.8
+	}
+	if courtcolor==2 {
+		pos 0,0
+		celput 8,,0.8,0.8
+	}pos ballx,bally              
+	gmode 2 : celput 4,,0.08,0.08
+	if operate==0 {
+		if a==1   : racketx=racketx-5.5
+	    if a==4   : racketx=racketx+5.5
+	}
+	if operate==1 {
+		if racketx>=250 : racketx=mousex-70
+		if racketx<250  : racketx=mousex-48
+	}
+	pos racketx,rackety          
+	if racketx>=250 : gmode 2 : celput 2,,0.7,0.7
+	if racketx<250  : gmode 2 : celput 3,,0.7,0.7
+	color 0,0,0
+	pos 30,40
+	mes "←→\nMove\n\nSpace\nStart\n\nEsc\nRestart\n\nC:Clay\nH:Hard\nG:Grass\n\nCtrl←→Enter\nCursor←→Mouse"
+	pos 600,20
+	gmode 1 : celput 5,,0.9,0.9
+	pos 770,68     
+	color 255,255,0
+	if win==0 : print " 0"
+	if win==1 : print "15"
+	if win==2 : print "30"
+	if win==3 : print "40"
+	if win>3  & win=loss-1 : print "40"
+	if win>3  & win=loss   : print "40"
+	if win>=4 & win=loss+1 : print " A"
+	pos 770,125
+	color 255,255,0
+	if loss==0 : print " 0"
+	if loss==1 : print "15"
+	if loss==2 : print "30"
+	if loss==3 : print "40"
+	if loss>3  & loss=win-1 : print "40"
+	if loss>3  & loss=win   : print "40"
+	if loss>=4 & loss=win+1 : print " A"
+	stick a,1+4
+	if a==128 : win=0 : loss=0 : break
+	
+	angle+=7.0   ;ボールのスピード
+	;アウトの軌道(全サーフェスで一緒)
+	bally=450-deg2rad(angle)*reachy*1.5-sin(deg2rad(angle))*reachy*1.5
+	if direction==0 | direction==1 : ballx=ballx-1
+	if direction==2                : ballx+=10
+	if direction==3 | direction==4 : ballx=ballx+1
+	
+	if bally<10 {  ;アウトになったときポイントを取られる
+		         wait 30
+		         mmplay 4
+		         loss=loss+1
+		         break
+	}
+	redraw 1
+	wait 1
+ loop
+ 
+    goto *main
+
+*notouch
+ repeat
+	redraw 0
+	
+	;基本動作
+	color 255,255,255 : boxf
+	if courtcolor==0 {
+		pos 0,0
+		celput 1,,0.8,0.8
+	}
+	if courtcolor==1 {
+		pos 0,0
+		celput 7,,0.8,0.8
+	}
+	if courtcolor==2 {
+		pos 0,0
+		celput 8,,0.8,0.8
+	}
+	pos ballx,bally              
+	gmode 2 : celput 4,,0.08,0.08
+	if operate==0 {
+		if a==1   : racketx=racketx-5.5
+	    if a==4   : racketx=racketx+5.5
+	}
+	if operate==1 {
+		if racketx>=250 : racketx=mousex-70
+		if racketx<250  : racketx=mousex-48
+	}
+	pos racketx,rackety          
+	if racketx>=250 : gmode 2 : celput 2,,0.7,0.7
+	if racketx<250  : gmode 2 : celput 3,,0.7,0.7
+	color 0,0,0
+	pos 30,40
+	mes "←→\nMove\n\nSpace\nStart\n\nEsc\nRestart\n\nC:Clay\nH:Hard\nG:Grass\n\nCtrl←→Enter\nCursor←→Mouse"
+	pos 600,20
+	gmode 1 : celput 5,,0.9,0.9
+	pos 770,68  
+	color 255,255,0
+	if win==0 : print " 0"
+	if win==1 : print "15"
+	if win==2 : print "30"
+	if win==3 : print "40"
+	if win>3  & win=loss-1 : print "40"
+	if win>3  & win=loss   : print "40"
+	if win>=4 & win=loss+1 : print " A"
+	pos 770,125  
+	color 255,255,0
+	if loss==0 : print " 0"
+	if loss==1 : print "15"
+	if loss==2 : print "30"
+	if loss==3 : print "40"
+	if loss>3  & loss=win-1 : print "40"
+	if loss>3  & loss=win   : print "40"
+	if loss>=4 & loss=win+1 : print " A"
+	stick a,1+4 
+	if a==1   : racketx=racketx-5.5
+	if a==4   : racketx=racketx+5.5
+	if a==128 : win=0 : loss=0 : break
+
+	;ボールの軌道
+	courseX+=3.5 ;だんだんx座標を加えていく
+	if courtcolor==0 {
+		angle+=6.5
+		bally=deg2rad(angle)*reachy-sin(deg2rad(angle))*reachy
+		if direction==0 | direction==1 {
+			ballx=400-courseX+cos(deg2rad(angle))*reachx
+			}
+		if direction==3 | direction==4 {
+			ballx=400+courseX-cos(deg2rad(angle))*reachx
+			}
+	}
+	if courtcolor==1 {
+		angle+=5.5
+		bally=deg2rad(angle)*reachy-sin(deg2rad(angle))*reachy
+		if direction==0 | direction==1 {
+			ballx=400-courseX+cos(deg2rad(angle))*reachx
+			}
+		if direction==3 | direction==4 {
+			ballx=400+courseX-cos(deg2rad(angle))*reachx
+			}
+	}
+	if courtcolor==2 {
+		angle+=7.5
+		bally=deg2rad(angle)*reachy-sin(deg2rad(angle))*reachy
+		if direction==0 | direction==1 {
+			ballx=400-courseX+cos(deg2rad(angle))*reachx
+			}
+		if direction==3 | direction==4 {
+			ballx=400+courseX-cos(deg2rad(angle))*reachx
+			}
+	}
+	
+	if bally>=580 {
+		          wait 30
+		          mmplay 5
+		          loss=loss+1
+		          break
+	}
+
+	redraw 1
+	wait 1
+ loop
+ 
+    goto *main
